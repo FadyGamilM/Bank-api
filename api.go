@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -33,11 +34,21 @@ type apiHttpHandlerFunc func(http.ResponseWriter, *http.Request) error
 // some handlers to handle http requests
 // actually these handlers are not perfectly tied to the http.handler syntax .. because i don't need to handle the error inside the handler, i need to return it and handle it somewhere else
 func (server *apiServer) handleAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	// select the appropriate handler according to the http method
+	switch r.Method {
+	case http.MethodGet:
+		return server.handleGetAccount(w, r)
+	case http.MethodPost:
+		return server.handleCreateAccount(w, r)
+	case http.MethodDelete:
+		return server.handleDeleteAccount(w, r)
+	default:
+		return fmt.Errorf("Method Is Not Allowed %s", r.Method)
+	}
 }
 
 func (server *apiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	return SendJson(w, http.StatusOK, AccountFactory("Fady", "Gamil"))
 }
 
 func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
