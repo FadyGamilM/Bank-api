@@ -77,11 +77,11 @@ func makeHttpHandlerFunc(apiFunc apiHttpHandlerFunc) http.HandlerFunc {
 
 // a method to return a json response into the response writer variable
 func SendJson(w http.ResponseWriter, statusCode int, value any) error {
+	// set the header format
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	// set the status code
 	w.WriteHeader(statusCode)
-
-	// set the header format
-	w.Header().Set("Content-Type", "application/json")
 
 	// send the json response
 	return json.NewEncoder(w).Encode(value)
