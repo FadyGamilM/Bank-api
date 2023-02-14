@@ -13,13 +13,15 @@ import (
 
 // our server type
 type apiServer struct {
-	port string
+	port    string
+	storage Storage
 }
 
 // constructor
-func NewApiServer(listenAddress string) *apiServer {
+func NewApiServer(listenAddress string, storage Storage) *apiServer {
 	return &apiServer{
-		port: listenAddress,
+		port:    listenAddress,
+		storage: storage,
 	}
 }
 
