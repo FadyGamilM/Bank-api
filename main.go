@@ -15,6 +15,6 @@ func main() {
 	fmt.Printf("%v\n", storage)
 
 	// run the server
-	// server := NewApiServer("localhost:5000", storage)
-	// server.Run()
+	server := NewApiServer("localhost:5000", storage)
+	server.Run()
 }

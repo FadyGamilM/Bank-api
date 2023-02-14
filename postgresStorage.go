@@ -26,15 +26,13 @@ func PostgresStorageFactory() (*PostgresStorage, error) {
 
 	DataSourceDetails.RawQuery = q.Encode()
 
-	// connectionString := "user=user dbname=bankDB password=gobankingpassword sslmode=disable"
+	// connectionString := "user=fady dbname=bankDB password=gobankingpassword sslmode=disable"
 
 	db, err := sql.Open("pgx", DataSourceDetails.String())
-
-	defer func() {
-		_ = db.Close()
-		fmt.Println("Db Connection is closed")
-	}()
-
+	// defer func() {
+	// 	_ = db.Close()
+	// 	fmt.Println("Db Connection is closed")
+	// }()
 	if err != nil {
 		fmt.Println("error 1")
 		return nil, err
@@ -48,4 +46,21 @@ func PostgresStorageFactory() (*PostgresStorage, error) {
 	}
 
 	return &PostgresStorage{db: db}, nil
+}
+
+// TODO => implement the storage interface
+func (db *PostgresStorage) CreateAccount(account *Account) error {
+	return nil
+}
+
+func (db *PostgresStorage) GetAccountById(accountID int) (*Account, error) {
+	return nil, nil
+}
+
+func (db *PostgresStorage) UpdateAccount(account *Account) error {
+	return nil
+}
+
+func (db *PostgresStorage) DeleteAccount(accountID int) error {
+	return nil
 }
