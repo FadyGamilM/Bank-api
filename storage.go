@@ -2,11 +2,13 @@ package main
 
 // abstract our persistence layer so we can later use any database provider [sql or nosql]
 type Storage interface {
-	CreateAccount(*Account) error
+	Create(*Account) error
 
-	DeleteAccount(int) error
+	DeleteById(int) error
 
-	UpdateAccount(*Account) error
+	Update(*Account) error
 
-	GetAccountById(int) (*Account, error)
+	GetById(int) (*Account, error)
+
+	GetAll() ([]*Account, error)
 }

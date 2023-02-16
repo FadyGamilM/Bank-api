@@ -39,7 +39,7 @@ func (server *apiServer) handleAccount(w http.ResponseWriter, r *http.Request) e
 	// select the appropriate handler according to the http method
 	switch r.Method {
 	case http.MethodGet:
-		return server.handleGetAccount(w, r)
+		return server.HandleGetAccounts(w, r)
 	case http.MethodPost:
 		return server.handleCreateAccount(w, r)
 	case http.MethodDelete:
@@ -49,12 +49,39 @@ func (server *apiServer) handleAccount(w http.ResponseWriter, r *http.Request) e
 	}
 }
 
+func (server *apiServer) HandleGetAccounts(w http.ResponseWriter, r *http.Request) error {
+	accounts, err := server.storage.GetAll()
+	if err != nil {
+		log.Println("Error while fetching all accounts from db => ", err)
+		return err
+	}
+	return SendJson(w, http.StatusOK, accounts)
+}
+
 func (server *apiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
 	return SendJson(w, http.StatusOK, AccountFactory("Fady", "Gamil"))
 }
 
 func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	// utilize the dto request
+	createAccDto := CreateAccountDTO{}
+
+	// decode the given object to the account type we have defined
+	if err := json.NewDecoder(r.Body).Decode(&createAccDto); err != nil {
+		log.Println("Error while decoding the new account in POST request => ", err)
+		return err
+	}
+
+	// use the storage apis we have defined in the storage interface to create the entity and add it to the database
+	newAccount := AccountFactory(createAccDto.FirstName, createAccDto.LastName)
+	// handle errors if there are any
+	if err := server.storage.Create(newAccount); err != nil {
+		log.Println("Error while creating the new account in POST request => ", err)
+		return err
+	}
+
+	// return the response
+	return SendJson(w, http.StatusCreated, newAccount)
 }
 
 func (server *apiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
@@ -65,7 +92,7 @@ func (server *apiServer) handleTransferAccount(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-// wrapper above my handlers to convert them to the http.handlerFunc syntax
+// ! wrapper above my handlers to convert them to the http.handlerFunc syntax
 func makeHttpHandlerFunc(apiFunc apiHttpHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO => handle the error from my custom handlers here
@@ -77,7 +104,7 @@ func makeHttpHandlerFunc(apiFunc apiHttpHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// a method to return a json response into the response writer variable
+// ! a method to return a json response into the response writer variable
 func SendJson(w http.ResponseWriter, statusCode int, value any) error {
 	// set the header format
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -89,13 +116,14 @@ func SendJson(w http.ResponseWriter, statusCode int, value any) error {
 	return json.NewEncoder(w).Encode(value)
 }
 
-// method to construct the server router, register the handlers
+// !method to construct the server router, register the handlers
 func (server *apiServer) Run() {
 	// instantiate the server router
 	router := mux.NewRouter()
 
-	// register the handler
-	router.HandleFunc("/account", makeHttpHandlerFunc(server.handleAccount))
+	// register the handler/s
+	router.HandleFunc("/api/accounts", makeHttpHandlerFunc(server.handleAccount))
+	router.HandleFunc("/api/accounts/{id}", makeHttpHandlerFunc(server.handleGetAccount))
 
 	//  logging
 	log.Println("server is up and running on port ", server.port)
