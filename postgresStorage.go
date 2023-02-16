@@ -64,3 +64,26 @@ func (db *PostgresStorage) UpdateAccount(account *Account) error {
 func (db *PostgresStorage) DeleteAccount(accountID int) error {
 	return nil
 }
+
+func (db *PostgresStorage) CreateAccountTable() error {
+	query := `
+		CREATE TABLE IF NOT EXISTS ACCOUNTS (
+			id SERIAL PRIMARY KEY, 
+			fname VARCHAR(50) NOT NULL,
+			lname VARCHAR(50) NOT NULL,
+			number serial,
+			balance serial,
+			created_at timestamp
+		);`
+
+	sqlResult, err := db.db.Exec(query)
+	if err != nil {
+		return err
+	}
+	fmt.Println(sqlResult)
+	return nil
+}
+
+func (db *PostgresStorage) Init() error {
+	return db.CreateAccountTable()
+}
