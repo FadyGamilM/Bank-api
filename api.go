@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -59,7 +60,18 @@ func (server *apiServer) HandleGetAccounts(w http.ResponseWriter, r *http.Reques
 }
 
 func (server *apiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
-	return SendJson(w, http.StatusOK, AccountFactory("Fady", "Gamil"))
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		log.Println("Error while formatting the passed account id from the url => ", err)
+		return err
+	}
+	account, err := server.storage.GetById(id)
+	if err != nil {
+		log.Println("Error while fetching account by id => ", err)
+		return err
+	}
+
+	return SendJson(w, http.StatusOK, account)
 }
 
 func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {

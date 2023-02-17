@@ -102,7 +102,39 @@ func (storage *PostgresStorage) GetAll() ([]*Account, error) {
 }
 
 func (storage *PostgresStorage) GetById(accountID int) (*Account, error) {
-	return nil, nil
+	query := `SELECT * FROM ACCOUNTS AS ACC WHERE ACC.id = $1`
+
+	rows, err := storage.db.Query(query, accountID)
+	if err != nil {
+		log.Println("Error while fetching the account => ", err)
+		return nil, err
+	}
+
+	for rows.Next() {
+		return ScanRowIntoAccount(rows)
+	}
+
+	// return not found
+	return nil, fmt.Errorf("Account with id = %d is not found", accountID)
+}
+
+// ! a helper method used to scan one row [after calling .Next() from the caller function] and convert it into Account entity
+func ScanRowIntoAccount(rows *sql.Rows) (*Account, error) {
+	// define new entity to be a placeholder
+	account := new(Account)
+
+	// scan the current row into this entity
+	err := rows.Scan(&account.ID,
+		&account.FirstName,
+		&account.LastName,
+		&account.Number,
+		&account.Balance,
+		&account.CreatedAt)
+	if err != nil {
+		log.Println("Error while scanning the row => ", err)
+		return nil, err
+	}
+	return account, nil
 }
 
 func (storage *PostgresStorage) Update(account *Account) error {
