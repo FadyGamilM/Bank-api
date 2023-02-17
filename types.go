@@ -29,3 +29,9 @@ type CreateAccountDTO struct {
 	FirstName string `json:"fname"`
 	LastName  string `json:"lname"`
 }
+
+// transfer to account request
+type TransferToAccountRequest struct {
+	ToAccountID int     `json:"to_account_id"`
+	Amount      float64 `json:"amount"`
+}

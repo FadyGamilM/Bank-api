@@ -36,6 +36,7 @@ type apiHttpHandlerFunc func(http.ResponseWriter, *http.Request) error
 
 // some handlers to handle http requests
 // actually these handlers are not perfectly tied to the http.handler syntax .. because i don't need to handle the error inside the handler, i need to return it and handle it somewhere else
+// TODO => to handle [GET, POST] requests to `/api/accounts`
 func (server *apiServer) handleAccount(w http.ResponseWriter, r *http.Request) error {
 	// select the appropriate handler according to the http method
 	switch r.Method {
@@ -43,10 +44,21 @@ func (server *apiServer) handleAccount(w http.ResponseWriter, r *http.Request) e
 		return server.HandleGetAccounts(w, r)
 	case http.MethodPost:
 		return server.handleCreateAccount(w, r)
+	default:
+		return fmt.Errorf("Method Is Not Allowed %s", r.Method)
+	}
+}
+
+// TODO => to handle [GET, PUT, DELETE] requests to `/api/accounts/{id}`
+func (server *apiServer) handleAccountById(w http.ResponseWriter, r *http.Request) error {
+	// select the appropriate method
+	switch r.Method {
+	case http.MethodGet:
+		return server.handleAccountById(w, r)
 	case http.MethodDelete:
 		return server.handleDeleteAccount(w, r)
 	default:
-		return fmt.Errorf("Method Is Not Allowed %s", r.Method)
+		return fmt.Errorf("Method is not allowed")
 	}
 }
 
@@ -97,11 +109,30 @@ func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Requ
 }
 
 func (server *apiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	accountID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		return fmt.Errorf("Error while converting the passed id parameter")
+	}
+	err = server.storage.DeleteById(accountID)
+	if err != nil {
+		return fmt.Errorf("Error while deleting an account with id = %d", accountID)
+	}
+	return SendJson(w, http.StatusAccepted, map[string]int{"deleted": accountID})
 }
 
 func (server *apiServer) handleTransferAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	// create instance of the transfer request dto we have defined in types file
+	accountTransfer := new(TransferToAccountRequest)
+
+	// decode the received object
+	err := json.NewDecoder(r.Body).Decode(&accountTransfer)
+	if err != nil {
+		fmt.Errorf("Error while decoding the request body")
+		return err
+	}
+
+	// send the response back
+	return SendJson(w, http.StatusAccepted, accountTransfer)
 }
 
 // ! wrapper above my handlers to convert them to the http.handlerFunc syntax
@@ -135,7 +166,8 @@ func (server *apiServer) Run() {
 
 	// register the handler/s
 	router.HandleFunc("/api/accounts", makeHttpHandlerFunc(server.handleAccount))
-	router.HandleFunc("/api/accounts/{id}", makeHttpHandlerFunc(server.handleGetAccount))
+	router.HandleFunc("/api/accounts/{id}", makeHttpHandlerFunc(server.handleAccountById))
+	router.HandleFunc("/api/accounts/transfer", makeHttpHandlerFunc(server.handleTransferAccount))
 
 	//  logging
 	log.Println("server is up and running on port ", server.port)

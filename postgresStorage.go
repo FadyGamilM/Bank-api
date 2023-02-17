@@ -142,6 +142,18 @@ func (storage *PostgresStorage) Update(account *Account) error {
 }
 
 func (storage *PostgresStorage) DeleteById(accountID int) error {
+	sqlResult, err := storage.db.Exec(`DELETE FROM ACCOUNTS WHERE id = $1`, accountID)
+	if err != nil {
+		return fmt.Errorf("Error while deleting the account with id = %d", accountID)
+	}
+	log.Printf("Result of deleting account with id = %d \n", accountID)
+	log.Println(sqlResult.RowsAffected())
+	rowsAffected, err := sqlResult.RowsAffected()
+	if err != nil {
+		fmt.Errorf("Server Error while deleting a row with id = %d", accountID)
+		return err
+	}
+	log.Println("Number of affected rows is %d", rowsAffected)
 	return nil
 }
 
