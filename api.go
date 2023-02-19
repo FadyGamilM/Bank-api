@@ -54,7 +54,7 @@ func (server *apiServer) handleAccountById(w http.ResponseWriter, r *http.Reques
 	// select the appropriate method
 	switch r.Method {
 	case http.MethodGet:
-		return server.handleAccountById(w, r)
+		return server.handleGetAccount(w, r)
 	case http.MethodDelete:
 		return server.handleDeleteAccount(w, r)
 	default:
@@ -111,11 +111,11 @@ func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Requ
 func (server *apiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
 	accountID, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		return fmt.Errorf("Error while converting the passed id parameter")
+		return fmt.Errorf("error while converting the passed id parameter")
 	}
 	err = server.storage.DeleteById(accountID)
 	if err != nil {
-		return fmt.Errorf("Error while deleting an account with id = %d", accountID)
+		return fmt.Errorf("error while deleting an account with id = %d", accountID)
 	}
 	return SendJson(w, http.StatusAccepted, map[string]int{"deleted": accountID})
 }
@@ -127,8 +127,7 @@ func (server *apiServer) handleTransferAccount(w http.ResponseWriter, r *http.Re
 	// decode the received object
 	err := json.NewDecoder(r.Body).Decode(&accountTransfer)
 	if err != nil {
-		fmt.Errorf("Error while decoding the request body")
-		return err
+		return fmt.Errorf("error while decoding the request body")
 	}
 
 	// send the response back
@@ -167,7 +166,7 @@ func (server *apiServer) Run() {
 	// register the handler/s
 	router.HandleFunc("/api/accounts", makeHttpHandlerFunc(server.handleAccount))
 	router.HandleFunc("/api/accounts/{id}", makeHttpHandlerFunc(server.handleAccountById))
-	router.HandleFunc("/api/accounts/transfer", makeHttpHandlerFunc(server.handleTransferAccount))
+	router.HandleFunc("/api/accounts/money-transfer", makeHttpHandlerFunc(server.handleTransferAccount))
 
 	//  logging
 	log.Println("server is up and running on port ", server.port)
