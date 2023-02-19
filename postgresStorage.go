@@ -35,15 +35,13 @@ func PostgresStorageFactory() (*PostgresStorage, error) {
 	// 	fmt.Println("Db Connection is closed")
 	// }()
 	if err != nil {
-		fmt.Println("error 1")
-		return nil, err
+		return nil, fmt.Errorf("error while opening a connection to the database")
 	}
 
 	// ping the db conn
 	if err := db.Ping(); err != nil {
 		fmt.Println(err)
-		fmt.Println("error 2")
-		return nil, err
+		return nil, fmt.Errorf("error while trying to ping the connected databse")
 	}
 
 	return &PostgresStorage{db: db}, nil
@@ -64,7 +62,7 @@ func (storage *PostgresStorage) Create(account *Account) error {
 	)
 	if err != nil {
 		log.Println("Error while executing the INSERT query => ", err)
-		return err
+		return fmt.Errorf("error while executing the INSERT query")
 	}
 
 	log.Println(queryResp)
@@ -79,23 +77,13 @@ func (storage *PostgresStorage) GetAll() ([]*Account, error) {
 	query := `SELECT * FROM ACCOUNTS`
 	rows, err := storage.db.Query(query)
 	if err != nil {
-		log.Println("Error while quering all rows from database => ", err)
-		return nil, err
+		log.Println("error while quering all rows from database => ", err)
+		return nil, fmt.Errorf("error while fetching all rows from database")
 	}
 	for rows.Next() {
 		// define a destination so the `rows.Scan()` method can map the value from columns into the destination props
 		// NOTE => i defined the account as an address because Scan maps the values into pointers
-		account := new(Account)
-		err := rows.Scan(&account.ID,
-			&account.FirstName,
-			&account.LastName,
-			&account.Number,
-			&account.Balance,
-			&account.CreatedAt)
-		if err != nil {
-			log.Println("Error while scanning the row => ", err)
-			return nil, err
-		}
+		account, _ := ScanRowIntoAccount(rows)
 		allAccounts = append(allAccounts, account)
 	}
 	return allAccounts, nil
@@ -132,7 +120,7 @@ func ScanRowIntoAccount(rows *sql.Rows) (*Account, error) {
 		&account.CreatedAt)
 	if err != nil {
 		log.Println("Error while scanning the row => ", err)
-		return nil, err
+		return nil, fmt.Errorf("error while scanning the fetched row")
 	}
 	return account, nil
 }
@@ -144,16 +132,15 @@ func (storage *PostgresStorage) Update(account *Account) error {
 func (storage *PostgresStorage) DeleteById(accountID int) error {
 	sqlResult, err := storage.db.Exec(`DELETE FROM ACCOUNTS WHERE id = $1`, accountID)
 	if err != nil {
-		return fmt.Errorf("Error while deleting the account with id = %d", accountID)
+		return fmt.Errorf("error while deleting the account with id = %d", accountID)
 	}
 	log.Printf("Result of deleting account with id = %d \n", accountID)
 	log.Println(sqlResult.RowsAffected())
 	rowsAffected, err := sqlResult.RowsAffected()
 	if err != nil {
-		fmt.Errorf("Server Error while deleting a row with id = %d", accountID)
-		return err
+		return fmt.Errorf("server Error while deleting a row with id = %d", accountID)
 	}
-	log.Println("Number of affected rows is %d", rowsAffected)
+	log.Printf("Number of affected rows is %d", rowsAffected)
 	return nil
 }
 
