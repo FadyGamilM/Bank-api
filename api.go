@@ -104,6 +104,14 @@ func (server *apiServer) handleCreateAccount(w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
+	// create the jwt token
+	token, err := CreateJwtToken(newAccount)
+	if err != nil {
+		return fmt.Errorf("error while creating a jwt token for the new account")
+	}
+
+	log.Println("jwt token  => ", token)
+
 	// return the response
 	return SendJson(w, http.StatusCreated, newAccount)
 }
@@ -165,8 +173,8 @@ func (server *apiServer) Run() {
 
 	// register the handler/s
 	router.HandleFunc("/api/accounts", makeHttpHandlerFunc(server.handleAccount))
-	router.HandleFunc("/api/accounts/{id}", makeHttpHandlerFunc(server.handleAccountById))
-	router.HandleFunc("/api/accounts/money-transfer", makeHttpHandlerFunc(server.handleTransferAccount))
+	router.HandleFunc("/api/accounts/{id}", Authorize(makeHttpHandlerFunc(server.handleAccountById), server.storage))
+	router.HandleFunc("/api/accounts/money-transfer", Authorize(makeHttpHandlerFunc(server.handleTransferAccount), server.storage))
 
 	//  logging
 	log.Println("server is up and running on port ", server.port)

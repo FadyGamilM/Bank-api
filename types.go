@@ -16,10 +16,11 @@ type Account struct {
 
 // initializer constructor
 func AccountFactory(fname, lname string) *Account {
+	rand.Seed(time.Now().Unix())
 	return &Account{
 		FirstName: fname,
 		LastName:  lname,
-		Number:    int64(rand.Intn(100000000)),
+		Number:    int64(rand.Intn(15000)),
 		CreatedAt: time.Now().UTC(),
 	}
 }
